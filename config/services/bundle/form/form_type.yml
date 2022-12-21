@@ -1,0 +1,12 @@
+services:
+  _defaults:
+    public: true
+
+  form.type.pixel.sucuri.option_form:
+    class: 'Pixel\Module\Sucuri\Form\Admin\OptionType'
+    public: true
+    arguments:
+      - '@translator'
+      - '@pixel.sucuri.config'
+    tags:
+      - { name: form.type }

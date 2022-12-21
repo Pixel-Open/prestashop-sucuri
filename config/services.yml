@@ -1,0 +1,38 @@
+services:
+  pixel.sucuri.controller:
+    class: 'Pixel\Module\Sucuri\Controller\Admin\SucuriController'
+    arguments:
+      - '@pixel.sucuri.api'
+      - '@pixel.sucuri.cache'
+      - '@pixel.sucuri.config'
+  pixel.sucuri.grid.definition.factory.settings_definition_factory:
+    class: 'Pixel\Module\Sucuri\Grid\Definition\SettingsFactory'
+    parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
+    public: true
+  pixel.sucuri.grid.settings_grid_factory:
+    class: 'PrestaShop\PrestaShop\Core\Grid\GridFactory'
+    arguments:
+      - '@pixel.sucuri.grid.definition.factory.settings_definition_factory'
+      - '@pixel.sucuri.grid.data.factory.settings_data_factory'
+      - '@prestashop.core.grid.filter.form_factory'
+      - '@prestashop.core.hook.dispatcher'
+  symfony.component.http.client.curl:
+    class: 'Symfony\Component\HttpClient\CurlHttpClient'
+  pixel.sucuri.cache:
+    class: 'Pixel\Module\Sucuri\Helper\Cache'
+  pixel.sucuri.config:
+    class: 'Pixel\Module\Sucuri\Helper\Config'
+  pixel.sucuri.api:
+    class: 'Pixel\Module\Sucuri\Model\Api'
+    arguments:
+      - '@symfony.component.http.client.curl'
+      - '@pixel.sucuri.config'
+      - '@pixel.sucuri.cache'
+  pixel.sucuri.grid.data.factory.settings_data_factory:
+    class: 'Pixel\Module\Sucuri\Grid\Data\SettingsFactory'
+    arguments:
+      - '@pixel.sucuri.api'
+
+imports:
+  - { resource: services/bundle/form/form_builder.yml }
+  - { resource: services/bundle/form/form_type.yml }

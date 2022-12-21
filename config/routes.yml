@@ -1,0 +1,20 @@
+admin_sucuri_settings:
+  path: /sucuri/settings
+  methods: [GET]
+  defaults:
+    _controller: 'pixel.sucuri.controller:settingsAction'
+admin_sucuri_edit:
+  path: /sucuri/edit
+  methods: [GET, POST]
+  defaults:
+    _controller: 'pixel.sucuri.controller:editAction'
+admin_sucuri_refresh:
+  path: /sucuri/refresh
+  methods: [GET]
+  defaults:
+    _controller: 'pixel.sucuri.controller:refreshAction'
+admin_sucuri_flush:
+  path: /sucuri/flush
+  methods: [GET]
+  defaults:
+    _controller: 'pixel.sucuri.controller:flushAction'
