@@ -9,9 +9,6 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-use PrestaShop\PrestaShop\Core\Addon\Theme\ThemeProviderInterface;
-use PrestaShop\PrestaShop\Core\Module\WidgetInterface;
-
 class Pixel_sucuri extends Module
 {
     /**
@@ -43,19 +40,31 @@ class Pixel_sucuri extends Module
             'max' => _PS_VERSION_,
         ];
 
-        $tabNames = [];
+        $settingsNames = [];
+        $logsNames = [];
         foreach (Language::getLanguages() as $lang) {
-            $tabNames[$lang['locale']] = 'Sucuri';
+            $settingsNames[$lang['locale']] = $this->trans('Sucuri Settings', [], 'Modules.Pixelsucuri.Admin', $lang['locale']);
+            $logsNames[$lang['locale']] = $this->trans('Sucuri Logs', [], 'Modules.Pixelsucuri.Admin', $lang['locale']);
         }
+
         $this->tabs = [
             [
                 'route_name' => 'admin_sucuri_settings',
-                'class_name' => 'AdminPixelSucuri',
+                'class_name' => 'AdminPixelSucuriSettings',
                 'visible' => true,
-                'name' => $tabNames,
+                'name' => $settingsNames,
                 'parent_class_name' => 'AdminAdvancedParameters',
-                'wording' => 'Sucuri',
-                'wording_domain' => 'Modules.Pixelsucuri.Admin',
+                'wording' => 'Sucuri Settings',
+                'wording_domain' => 'Modules.Pixelsucuri.settings.Admin',
+            ],
+            [
+                'route_name' => 'admin_sucuri_logs',
+                'class_name' => 'AdminPixelSucuriLogs',
+                'visible' => true,
+                'name' => $logsNames,
+                'parent_class_name' => 'AdminAdvancedParameters',
+                'wording' => 'Sucuri Logs',
+                'wording_domain' => 'Modules.Pixelsucuri.logs.Admin',
             ],
         ];
     }
@@ -73,7 +82,45 @@ class Pixel_sucuri extends Module
     {
         return parent::install() &&
             $this->registerHook('displayDashboardToolbarTopMenu') &&
-            $this->registerHook('actionClearCompileCache');
+            $this->registerHook('actionClearCompileCache') &&
+            $this->createTables();
+    }
+
+    /**
+     * Create module tables
+     *
+     * @return bool
+     */
+    public function createTables(): bool
+    {
+        try {
+            Db::getInstance()->execute('
+                CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'sucuri_log` (
+                  `id` int unsigned NOT NULL AUTO_INCREMENT,
+                  `request_date` varchar(12) DEFAULT NULL,
+                  `request_time` varchar(8) DEFAULT NULL,
+                  `remote_addr` varchar(255) DEFAULT NULL,
+                  `request_method` varchar(255) DEFAULT NULL,
+                  `resource_path` text DEFAULT NULL,
+                  `http_protocol` varchar(10) DEFAULT NULL,
+                  `http_status` int DEFAULT NULL,
+                  `http_user_agent` text DEFAULT NULL,
+                  `sucuri_is_allowed` smallint DEFAULT NULL,
+                  `sucuri_is_blocked` smallint DEFAULT NULL,
+                  `sucuri_block_reason` varchar(255) DEFAULT NULL,
+                  `request_country_name` varchar(255) DEFAULT NULL,
+                  `checksum` varchar(255) NOT NULL,
+                  `full_date` timestamp NULL DEFAULT NULL,
+                  `shop_id` smallint unsigned NOT NULL DEFAULT "0",
+                  PRIMARY KEY (`id`),
+                  UNIQUE KEY `SUCURI_LOG_CHECKSUM` (`checksum`)
+                ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;
+            ');
+        } catch (Exception $exception) {
+            $this->_errors[] = $exception->getMessage();
+        }
+
+        return true;
     }
 
     /**
@@ -93,6 +140,20 @@ class Pixel_sucuri extends Module
      */
     public function isUsingNewTranslationSystem(): bool
     {
+        return true;
+    }
+
+    /**
+     * Delete configurations
+     *
+     * @return bool
+     */
+    protected function deleteConfigurations(): bool
+    {
+        foreach ($this->getConfigFields() as $key => $options) {
+            Configuration::deleteByName($key);
+        }
+
         return true;
     }
 
@@ -248,19 +309,5 @@ class Pixel_sucuri extends Module
         }
 
         return $helper->generateForm([$form]);
-    }
-
-    /**
-     * Delete configurations
-     *
-     * @return bool
-     */
-    protected function deleteConfigurations(): bool
-    {
-        foreach ($this->getConfigFields() as $key => $options) {
-            Configuration::deleteByName($key);
-        }
-
-        return true;
     }
 }

@@ -10,10 +10,12 @@ namespace Pixel\Module\Sucuri\Controller\Admin;
 
 use Cache;
 use Exception;
+use Pixel\Module\Sucuri\Grid\Definition\LogsFactory;
 use Pixel\Module\Sucuri\Helper\Config;
 use Pixel\Module\Sucuri\Helper\Cache as SucuriCache;
 use Pixel\Module\Sucuri\Model\Api;
 use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Builder\FormBuilder;
+use PrestaShop\PrestaShop\Core\Grid\Filter\GridFilterFormFactory;
 use PrestaShopLogger;
 use PrestaShopLoggerCore;
 use PrestaShop\PrestaShop\Core\Grid\GridFactory;
@@ -22,7 +24,6 @@ use PrestaShopBundle\Controller\Admin\FrameworkBundleAdminController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Throwable;
 
 class SucuriController extends FrameworkBundleAdminController
@@ -45,15 +46,42 @@ class SucuriController extends FrameworkBundleAdminController
     private $config;
 
     /**
+     * @var GridFilterFormFactory
+     */
+    private $filterFormFactory;
+
+    /**
+     * @var GridFactory
+     */
+    private $gridFactory;
+
+    /**
+     * @var LogsFactory
+     */
+    private $logsFactory;
+
+    /**
      * @param Api $api
      * @param SucuriCache $cache
      * @param Config $config
+     * @param GridFilterFormFactory $filterFormFactory
+     * @param GridFactory $gridFactory
+     * @param LogsFactory $logsFactory
      */
-    public function __construct(Api $api, SucuriCache $cache, Config $config)
-    {
+    public function __construct(
+        Api $api,
+        SucuriCache $cache,
+        Config $config,
+        GridFilterFormFactory $filterFormFactory,
+        GridFactory $gridFactory,
+        LogsFactory $logsFactory
+    ) {
         $this->api = $api;
         $this->cache = $cache;
         $this->config = $config;
+        $this->filterFormFactory = $filterFormFactory;
+        $this->gridFactory = $gridFactory;
+        $this->logsFactory = $logsFactory;
 
         parent::__construct();
     }
@@ -91,7 +119,7 @@ class SucuriController extends FrameworkBundleAdminController
      *
      * @return RedirectResponse
      */
-    public function refreshAction(Request $request): RedirectResponse
+    public function refreshSettingsAction(Request $request): RedirectResponse
     {
         try {
             $this->cache->erase(Api::SUCURI_SETTINGS_CACHE_KEY);
@@ -130,6 +158,83 @@ class SucuriController extends FrameworkBundleAdminController
         return $this->render('@Modules/pixel_sucuri/views/templates/admin/settings.html.twig', [
             'settingsGrid' => $this->presentGrid($settingsGrid),
         ]);
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     */
+    public function logsAction(Request $request): Response
+    {
+        $this->checkConfig();
+
+        $this->setAction('sucuri_logs');
+
+        $limit = $request->get('limit') ?: self::DEFAULT_LIMIT;
+        $offset = $request->get('offset') ?: 0;
+        $order = $request->get('orderBy') ?: 'id';
+        $sort = $request->get('sortOrder') ?: 'desc';
+
+        $definition = $this->logsFactory->getDefinition();
+
+        $filtersForm = $this->filterFormFactory->create($definition);
+        $filtersForm->handleRequest($request);
+
+        $filters = [];
+
+        if ($filtersForm->isSubmitted()) {
+            $filters = $filtersForm->getData();
+        }
+
+        $searchCriteria = new SearchCriteria($filters, $order, $sort, $offset, $limit);
+
+        $logsGrid = $this->gridFactory->getGrid($searchCriteria);
+
+        return $this->render('@Modules/pixel_sucuri/views/templates/admin/logs.html.twig', [
+            'logsGrid' => $this->presentGrid($logsGrid),
+            'layoutHeaderToolbarBtn' => $this->getLogsToolbarButtons(),
+            'layoutTitle' => $this->trans('Logs', 'Modules.Pixelsucuri.Admin'),
+        ]);
+    }
+
+    /**
+     * Gets the header toolbar buttons.
+     *
+     * @return array
+     */
+    private function getLogsToolbarButtons(): array
+    {
+        return [
+            'add' => [
+                'href' => $this->generateUrl('admin_sucuri_refresh_logs'),
+                'desc' => $this->trans('Refresh', 'Modules.Pixelsucuri.Admin'),
+                'icon' => 'add_circle_outline',
+            ],
+        ];
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return RedirectResponse
+     */
+    public function refreshLogsAction(Request $request): RedirectResponse
+    {
+        try {
+            $total = $this->api->refreshLog();
+            $this->addFlash(
+                'success',
+                $this->trans('%s log(s) added', 'Modules.Pixelsucuri.Admin', [$total])
+            );
+        } catch (Throwable $throwable) {
+            $this->addFlash(
+                'error',
+                $this->trans('Unable to refresh the logs: %s', 'Modules.Pixelsucuri.Admin', [$throwable->getMessage()])
+            );
+        }
+
+        return $this->redirectToRoute('admin_sucuri_logs');
     }
 
     /**

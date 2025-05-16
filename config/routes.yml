@@ -3,18 +3,28 @@ admin_sucuri_settings:
   methods: [GET]
   defaults:
     _controller: 'pixel.sucuri.controller:settingsAction'
+admin_sucuri_refresh_settings:
+  path: /sucuri/settings/refresh
+  methods: [GET]
+  defaults:
+    _controller: 'pixel.sucuri.controller:refreshSettingsAction'
 admin_sucuri_edit:
-  path: /sucuri/edit
+  path: /sucuri/settings/edit
   methods: [GET, POST]
   defaults:
     _controller: 'pixel.sucuri.controller:editAction'
-admin_sucuri_refresh:
-  path: /sucuri/refresh
-  methods: [GET]
-  defaults:
-    _controller: 'pixel.sucuri.controller:refreshAction'
 admin_sucuri_flush:
-  path: /sucuri/flush
+  path: /sucuri/cache/flush
   methods: [GET]
   defaults:
     _controller: 'pixel.sucuri.controller:flushAction'
+admin_sucuri_logs:
+  path: /sucuri/logs
+  methods: [GET, POST]
+  defaults:
+    _controller: 'pixel.sucuri.controller:logsAction'
+admin_sucuri_refresh_logs:
+  path: /sucuri/logs/refresh
+  methods: [GET]
+  defaults:
+    _controller: 'pixel.sucuri.controller:refreshLogsAction'

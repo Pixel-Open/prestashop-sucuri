@@ -11,6 +11,7 @@ namespace Pixel\Module\Sucuri\Model;
 use Exception;
 use Pixel\Module\Sucuri\Helper\Cache;
 use Pixel\Module\Sucuri\Helper\Config;
+use Pixel\Module\Sucuri\Repository\SucuriLog;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
@@ -21,6 +22,8 @@ use Throwable;
 class Api
 {
     public const SUCURI_SETTINGS_CACHE_KEY = 'sucuri_settings';
+
+    protected const REQUEST_LIMIT = 100;
 
     /**
      * @var Cache $cache
@@ -38,15 +41,26 @@ class Api
     private $config;
 
     /**
+     * @var SucuriLog
+     */
+    private $logRepository;
+
+    /**
      * @param HttpClientInterface $client
      * @param Config $config
      * @param Cache $cache
+     * @param SucuriLog $logRepository
      */
-    public function __construct(HttpClientInterface $client, Config $config, Cache $cache)
-    {
+    public function __construct(
+        HttpClientInterface $client,
+        Config $config,
+        Cache $cache,
+        SucuriLog $logRepository
+    ) {
         $this->client = $client;
         $this->config = $config;
-        $this->cache  = $cache;
+        $this->cache = $cache;
+        $this->logRepository = $logRepository;
     }
 
     /**
@@ -169,6 +183,49 @@ class Api
         $this->cache->erase(Api::SUCURI_SETTINGS_CACHE_KEY);
 
         return $result;
+    }
+
+    public function refreshLog(): int
+    {
+        return $this->doRefreshLog();
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function doRefreshLog(int $offset = 0): int
+    {
+        $result = $this->execute(
+            'audit_trails',
+            [
+                'offset' => $offset,
+                'limit' => self::REQUEST_LIMIT,
+                'format' => 'json',
+            ]
+        );
+
+        if (isset($result['status']) && $result['status'] !== 1) {
+            foreach (($result['messages'] ?? []) as $message) {
+                throw new Exception($message);
+            }
+            throw new Exception('The API request failed. Please check the configuration settings.');
+        }
+
+        $total = 0;
+
+        foreach ($result as $request) {
+            $log = $this->logRepository->save($request);
+
+            if ($log->getId()) {
+                $total++;
+            }
+        }
+
+        if (count($result) >= self::REQUEST_LIMIT) {
+            $total += $this->doRefreshLog($offset + self::REQUEST_LIMIT);
+        }
+
+        return $total;
     }
 
     /**

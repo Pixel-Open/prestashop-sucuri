@@ -2,9 +2,12 @@ services:
   pixel.sucuri.controller:
     class: 'Pixel\Module\Sucuri\Controller\Admin\SucuriController'
     arguments:
-      - '@pixel.sucuri.api'
-      - '@pixel.sucuri.cache'
-      - '@pixel.sucuri.config'
+      $api: '@pixel.sucuri.api'
+      $cache: '@pixel.sucuri.cache'
+      $config: '@pixel.sucuri.config'
+      $filterFormFactory: '@prestashop.core.grid.filter.form_factory'
+      $gridFactory: '@pixel.sucuri.grid.logs_grid_factory'
+      $logsFactory: '@pixel.sucuri.grid.definition.factory.logs_definition_factory'
     public: true
 
   pixel.sucuri.grid.definition.factory.settings_definition_factory:
@@ -16,6 +19,25 @@ services:
     arguments:
       - '@pixel.sucuri.grid.definition.factory.settings_definition_factory'
       - '@pixel.sucuri.grid.data.factory.settings_data_factory'
+      - '@prestashop.core.grid.filter.form_factory'
+      - '@prestashop.core.hook.dispatcher'
+    public: true
+
+  pixel.sucuri.grid.definition.factory.logs_definition_factory:
+    class: 'Pixel\Module\Sucuri\Grid\Definition\LogsFactory'
+    parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
+
+  pixel.sucuri.grid.query.logs_query_builder:
+    class: 'Pixel\Module\Sucuri\Grid\Query\LogsQueryBuilder'
+    parent: 'prestashop.core.grid.abstract_query_builder'
+    arguments:
+      $shopContext: "@prestashop.adapter.shop.context"
+
+  pixel.sucuri.grid.logs_grid_factory:
+    class: 'PrestaShop\PrestaShop\Core\Grid\GridFactory'
+    arguments:
+      - '@pixel.sucuri.grid.definition.factory.logs_definition_factory'
+      - '@pixel.sucuri.grid.data.factory.logs_data_factory'
       - '@prestashop.core.grid.filter.form_factory'
       - '@prestashop.core.hook.dispatcher'
     public: true
@@ -32,14 +54,30 @@ services:
   pixel.sucuri.api:
     class: 'Pixel\Module\Sucuri\Model\Api'
     arguments:
-      - '@symfony.component.http.client.curl'
-      - '@pixel.sucuri.config'
-      - '@pixel.sucuri.cache'
+      $client: '@symfony.component.http.client.curl'
+      $config: '@pixel.sucuri.config'
+      $cache: '@pixel.sucuri.cache'
+      $logRepository: '@pixel.sucuri.log.repository'
 
   pixel.sucuri.grid.data.factory.settings_data_factory:
     class: 'Pixel\Module\Sucuri\Grid\Data\SettingsFactory'
     arguments:
       - '@pixel.sucuri.api'
+
+  pixel.sucuri.grid.data.factory.logs_data_factory:
+    class: 'PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory'
+    arguments:
+      - '@pixel.sucuri.grid.query.logs_query_builder'
+      - '@prestashop.core.hook.dispatcher'
+      - '@prestashop.core.grid.query.doctrine_query_parser'
+      - 'sucuri_logs'
+
+  pixel.sucuri.log.repository:
+    class: 'Pixel\Module\Sucuri\Repository\SucuriLog'
+    arguments:
+      $entityManager: '@doctrine.orm.entity_manager'
+      $translator: '@translator'
+    public: true
 
 imports:
   - { resource: services/bundle/form/form_builder.yml }
