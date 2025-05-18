@@ -38,7 +38,7 @@ From the module manager, find the module and click on configure.
 
 ## Settings
 
-Sucuri settings are available under the menu: *Advanced settings > Sucuri*
+Sucuri settings are available under the menu: *Advanced settings > Sucuri Settings*
 
 **Action:**
 
@@ -48,3 +48,23 @@ Sucuri settings are available under the menu: *Advanced settings > Sucuri*
 
 - **Refresh**: Refresh the Sucuri config values saved in the local cache
 - **Update**: Update a Sucuri config value
+
+## Logs
+
+Display Audit Trails under the menu: *Advanced settings > Sucuri Logs*
+
+**Action:**
+
+- **Refresh:** Add the logs for the current day
+
+### CLI
+
+```shell
+./bin/console sucuri:log-refresh
+```
+
+It's recommended to refresh the logs hourly using a CRON job.
+
+```php
+0 * * * * /path/to/prestashop/bin/console sucuri:log-refresh
+```

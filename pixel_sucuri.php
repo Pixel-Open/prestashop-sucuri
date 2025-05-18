@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2023 Pixel Développement
+ * Copyright (C) 2025 Pixel Développement
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@ class Pixel_sucuri extends Module
     public function __construct()
     {
         $this->name = 'pixel_sucuri';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Pixel Open';
         $this->tab = 'administration';
         $this->need_instance = 0;

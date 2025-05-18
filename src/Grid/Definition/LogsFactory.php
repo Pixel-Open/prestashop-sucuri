@@ -11,12 +11,13 @@ namespace Pixel\Module\Sucuri\Grid\Definition;
 use PrestaShop\PrestaShop\Core\Grid\Action\GridActionCollection;
 use PrestaShop\PrestaShop\Core\Grid\Action\GridActionCollectionInterface;
 use PrestaShop\PrestaShop\Core\Grid\Action\Type\SimpleGridAction;
-use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\ActionColumn;
+use PrestaShop\PrestaShop\Core\Grid\Column\Type\Common\DateTimeColumn;
 use PrestaShop\PrestaShop\Core\Grid\Definition\Factory\AbstractGridDefinitionFactory;
 use PrestaShop\PrestaShop\Core\Grid\Column\ColumnCollection;
 use PrestaShop\PrestaShop\Core\Grid\Column\Type\DataColumn;
 use PrestaShop\PrestaShop\Core\Grid\Filter\Filter;
 use PrestaShop\PrestaShop\Core\Grid\Filter\FilterCollection;
+use PrestaShopBundle\Form\Admin\Type\DateRangeType;
 use PrestaShopBundle\Form\Admin\Type\SearchAndResetType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
@@ -56,16 +57,10 @@ final class LogsFactory extends AbstractGridDefinitionFactory
                     'field' => 'id',
                 ])
             )
-            ->add((new DataColumn('request_date'))
-                ->setName($this->trans('Request Date', [], 'Modules.Pixelsucuri.Admin'))
+            ->add((new DateTimeColumn('full_date'))
+                ->setName($this->trans('Date', [], 'Modules.Pixelsucuri.Admin'))
                 ->setOptions([
-                    'field' => 'request_date',
-                ])
-            )
-            ->add((new DataColumn('request_time'))
-                ->setName($this->trans('Request Time', [], 'Modules.Pixelsucuri.Admin'))
-                ->setOptions([
-                    'field' => 'request_time',
+                    'field' => 'full_date',
                 ])
             )
             ->add((new DataColumn('remote_addr'))
@@ -111,6 +106,12 @@ final class LogsFactory extends AbstractGridDefinitionFactory
                     'required' => false,
                 ])
                 ->setAssociatedColumn('remote_addr')
+            )
+            ->add((new Filter('full_date', DateRangeType::class))
+                ->setTypeOptions([
+                    'required' => false,
+                ])
+                ->setAssociatedColumn('full_date')
             )
             ->add((new Filter('resource_path', TextType::class))
                 ->setTypeOptions([

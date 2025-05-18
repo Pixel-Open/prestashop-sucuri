@@ -1,6 +1,7 @@
 services:
   pixel.sucuri.controller:
     class: 'Pixel\Module\Sucuri\Controller\Admin\SucuriController'
+    public: true
     arguments:
       $api: '@pixel.sucuri.api'
       $cache: '@pixel.sucuri.cache'
@@ -8,51 +9,74 @@ services:
       $filterFormFactory: '@prestashop.core.grid.filter.form_factory'
       $gridFactory: '@pixel.sucuri.grid.logs_grid_factory'
       $logsFactory: '@pixel.sucuri.grid.definition.factory.logs_definition_factory'
-    public: true
 
   pixel.sucuri.grid.definition.factory.settings_definition_factory:
     class: 'Pixel\Module\Sucuri\Grid\Definition\SettingsFactory'
+    public: true
     parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
 
   pixel.sucuri.grid.settings_grid_factory:
     class: 'PrestaShop\PrestaShop\Core\Grid\GridFactory'
+    public: true
     arguments:
       - '@pixel.sucuri.grid.definition.factory.settings_definition_factory'
       - '@pixel.sucuri.grid.data.factory.settings_data_factory'
       - '@prestashop.core.grid.filter.form_factory'
       - '@prestashop.core.hook.dispatcher'
+
+  pixel.sucuri.form.option_form_builder:
+    class: 'PrestaShop\PrestaShop\Core\Form\IdentifiableObject\Builder\FormBuilder'
     public: true
+    factory: 'prestashop.core.form.builder.form_builder_factory:create'
+    arguments:
+      - 'Pixel\Module\Sucuri\Form\Admin\OptionType'
+      - '@prestashop.core.form.identifiable_object.data_provider.customer_form_data_provider'
+
+  form.type.pixel.sucuri.option_form:
+    class: 'Pixel\Module\Sucuri\Form\Admin\OptionType'
+    public: true
+    arguments:
+      - '@translator'
+      - '@pixel.sucuri.config'
+    tags:
+      - { name: form.type }
 
   pixel.sucuri.grid.definition.factory.logs_definition_factory:
     class: 'Pixel\Module\Sucuri\Grid\Definition\LogsFactory'
+    public: true
     parent: 'prestashop.core.grid.definition.factory.abstract_grid_definition'
 
   pixel.sucuri.grid.query.logs_query_builder:
     class: 'Pixel\Module\Sucuri\Grid\Query\LogsQueryBuilder'
     parent: 'prestashop.core.grid.abstract_query_builder'
+    public: true
     arguments:
       $shopContext: "@prestashop.adapter.shop.context"
 
   pixel.sucuri.grid.logs_grid_factory:
     class: 'PrestaShop\PrestaShop\Core\Grid\GridFactory'
+    public: true
     arguments:
       - '@pixel.sucuri.grid.definition.factory.logs_definition_factory'
       - '@pixel.sucuri.grid.data.factory.logs_data_factory'
       - '@prestashop.core.grid.filter.form_factory'
       - '@prestashop.core.hook.dispatcher'
-    public: true
 
   symfony.component.http.client.curl:
     class: 'Symfony\Component\HttpClient\CurlHttpClient'
+    public: true
 
   pixel.sucuri.cache:
     class: 'Pixel\Module\Sucuri\Helper\Cache'
+    public: true
 
   pixel.sucuri.config:
     class: 'Pixel\Module\Sucuri\Helper\Config'
+    public: true
 
   pixel.sucuri.api:
     class: 'Pixel\Module\Sucuri\Model\Api'
+    public: true
     arguments:
       $client: '@symfony.component.http.client.curl'
       $config: '@pixel.sucuri.config'
@@ -61,11 +85,13 @@ services:
 
   pixel.sucuri.grid.data.factory.settings_data_factory:
     class: 'Pixel\Module\Sucuri\Grid\Data\SettingsFactory'
+    public: true
     arguments:
       - '@pixel.sucuri.api'
 
   pixel.sucuri.grid.data.factory.logs_data_factory:
     class: 'PrestaShop\PrestaShop\Core\Grid\Data\Factory\DoctrineGridDataFactory'
+    public: true
     arguments:
       - '@pixel.sucuri.grid.query.logs_query_builder'
       - '@prestashop.core.hook.dispatcher'
@@ -74,11 +100,16 @@ services:
 
   pixel.sucuri.log.repository:
     class: 'Pixel\Module\Sucuri\Repository\SucuriLog'
+    public: true
     arguments:
       $entityManager: '@doctrine.orm.entity_manager'
       $translator: '@translator'
-    public: true
 
-imports:
-  - { resource: services/bundle/form/form_builder.yml }
-  - { resource: services/bundle/form/form_type.yml }
+  pixel.sucuri.log.refresh:
+    class: Pixel\Module\Sucuri\Command\LogRefresh
+    public: true
+    arguments:
+      $api: '@pixel.sucuri.api'
+      $translator: '@translator'
+    tags:
+      - { name: 'console.command' }

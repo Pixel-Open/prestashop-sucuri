@@ -15,6 +15,7 @@ use Doctrine\ORM\ORMException;
 use Doctrine\ORM\ORMInvalidArgumentException;
 use Exception;
 use Pixel\Module\Sucuri\Entity\SucuriLog as Entity;
+use PixelOpen\Sucuri\Api\Data\LogInterface;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class SucuriLog
@@ -110,7 +111,16 @@ class SucuriLog
         $entity->setSucuriIsBlocked($data['sucuri_is_blocked'] ?? null);
         $entity->setSucuriBlockReason($data['sucuri_block_reason'] ?? null);
         $entity->setRequestCountryName($data['request_country_name'] ?? null);
-        $entity->setFullDate(null);
+
+        if ($entity->getRequestDate()) {
+            $date = explode('/', (string)$entity->getRequestDate());
+            if (isset($date[0], $date[1], $date[2])) {
+                $timestamp = strtotime($date[0] . $date[1] . $date[2]);
+                if ($timestamp) {
+                    $entity->setFullDate(date('Y-m-d', $timestamp) . ' ' . $entity->getRequestTime());
+                }
+            }
+        }
 
         $this->entityManager->persist($entity);
         $this->entityManager->flush();
@@ -165,7 +175,7 @@ class SucuriLog
     public function validate(array $data): bool
     {
         if (!($data['checksum'] ?? '')) {
-            throw new Exception($this->translator->trans('Checksum is required', [], 'Modules.Pixelquote.Shop'));
+            throw new Exception($this->translator->trans('Checksum is required', [], 'Modules.Pixelsucuri.Shop'));
         }
 
         return true;

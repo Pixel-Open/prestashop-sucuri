@@ -53,17 +53,33 @@ final class LogsQueryBuilder extends AbstractDoctrineQueryBuilder
             ->setMaxResults($searchCriteria->getLimit());
 
         foreach ($searchCriteria->getFilters() as $filterName => $filterValue) {
-            if (is_array($filterValue)) {
+            if (!$filterValue) {
                 continue;
             }
             if ('id' === $filterName) {
-                $qb->andWhere("cb.id = :$filterName");
-                $qb->setParameter($filterName, $filterValue);
+                $qb->andWhere(self::ALIAS . '.id = :filterName');
+                $qb->setParameter('filterName', $filterValue);
 
                 continue;
             }
+            if ('full_date' === $filterName) {
+                if (isset($filterValue['from'])) {
+                    $qb->andWhere(self::ALIAS . '.full_date >= :date_from');
+                    $qb->setParameter('date_from', sprintf('%s 0:0:0', $filterValue['from']));
+                }
 
-            $qb->andWhere("$filterName LIKE :$filterName");
+                if (isset($filterValue['to'])) {
+                    $qb->andWhere(self::ALIAS . '.full_date <= :date_to');
+                    $qb->setParameter('date_to', sprintf('%s 23:59:59', $filterValue['to']));
+                }
+
+                continue;
+            }
+            if (is_array($filterValue)) {
+                continue;
+            }
+
+            $qb->andWhere(self::ALIAS . '.' . $filterName . ' LIKE :' . $filterName);
             $qb->setParameter($filterName, '%' . $filterValue . '%');
         }
 

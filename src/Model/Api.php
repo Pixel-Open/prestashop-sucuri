@@ -214,6 +214,14 @@ class Api
         $total = 0;
 
         foreach ($result as $request) {
+            if (!isset($request['checksum'])) {
+                continue;
+            }
+            $entity = $this->logRepository->getByChecksum((string)$request['checksum']);
+            if ($entity) {
+                continue;
+            }
+
             $log = $this->logRepository->save($request);
 
             if ($log->getId()) {
