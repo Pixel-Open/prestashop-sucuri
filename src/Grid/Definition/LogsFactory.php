@@ -87,6 +87,12 @@ final class LogsFactory extends AbstractGridDefinitionFactory
                     'field' => 'http_status',
                 ])
             )
+            ->add((new DataColumn('request_country_name'))
+                ->setName($this->trans('Country', [], 'Modules.Pixelsucuri.Admin'))
+                ->setOptions([
+                    'field' => 'request_country_name',
+                ])
+            )
             ->add((new DataColumn('sucuri_block_reason'))
                 ->setName($this->trans('Reason', [], 'Modules.Pixelsucuri.Admin'))
                 ->setOptions([

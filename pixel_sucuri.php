@@ -17,7 +17,7 @@ class Pixel_sucuri extends Module
     public function __construct()
     {
         $this->name = 'pixel_sucuri';
-        $this->version = '1.2.0';
+        $this->version = '1.2.1';
         $this->author = 'Pixel Open';
         $this->tab = 'administration';
         $this->need_instance = 0;

@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Country added in logs grid
+
 ## 1.2.0
 
 - Audit Trails added in admin
