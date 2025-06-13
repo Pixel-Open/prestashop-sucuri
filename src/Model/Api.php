@@ -8,6 +8,7 @@
 
 namespace Pixel\Module\Sucuri\Model;
 
+use Doctrine\Common\Collections\Criteria;
 use Exception;
 use Pixel\Module\Sucuri\Helper\Cache;
 use Pixel\Module\Sucuri\Helper\Config;
@@ -234,6 +235,28 @@ class Api
         }
 
         return $total;
+    }
+
+    /**
+     * Clean logs
+     *
+     * @param int $retentionPeriod
+     * @return void
+     * @throws Exception
+     */
+    public function cleanLog(int $retentionPeriod = 60): int
+    {
+        $toDate = date('Y-m-d H:i:s', strtotime('-' . $retentionPeriod . ' days'));
+
+        $criteria = Criteria::create()->where(Criteria::expr()->lt('fullDate', $toDate));
+
+        $logs = $this->logRepository->matching($criteria);
+
+        foreach ($logs as $log) {
+            $this->logRepository->delete($log->getId());
+        }
+
+        return count($logs);
     }
 
     /**

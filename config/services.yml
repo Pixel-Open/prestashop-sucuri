@@ -113,3 +113,12 @@ services:
       $translator: '@translator'
     tags:
       - { name: 'console.command' }
+
+  pixel.sucuri.log.clean:
+    class: Pixel\Module\Sucuri\Command\LogClean
+    public: true
+    arguments:
+      $api: '@pixel.sucuri.api'
+      $translator: '@translator'
+    tags:
+      - { name: 'console.command' }

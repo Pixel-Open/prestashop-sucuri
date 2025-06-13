@@ -57,7 +57,9 @@ Display Audit Trails under the menu: *Advanced settings > Sucuri Logs*
 
 - **Refresh:** Add the logs for the current day
 
-### CLI
+## CLI
+
+### Refresh Logs
 
 ```shell
 ./bin/console sucuri:log-refresh
@@ -67,4 +69,23 @@ It's recommended to refresh the logs hourly using a CRON job.
 
 ```php
 0 * * * * /path/to/prestashop/bin/console sucuri:log-refresh
+```
+
+### Clean Logs
+
+```shell
+./bin/console sucuri:log-clean {retention_period}
+```
+
+Keep logs for the specified number of days in command argument. Default period is 60 days.
+
+```shell
+./bin/console sucuri:log-clean 30
+158 logs purged for a 30-day retention period
+```
+
+It's recommended to clean the logs hourly using a CRON job.
+
+```php
+0 * * * * /path/to/prestashop/bin/console sucuri:log-clean 60
 ```

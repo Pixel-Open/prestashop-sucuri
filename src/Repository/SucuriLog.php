@@ -8,6 +8,7 @@
 
 namespace Pixel\Module\Sucuri\Repository;
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\OptimisticLockException;
@@ -167,6 +168,17 @@ class SucuriLog
         $repository = $this->entityManager->getRepository(Entity::class);
 
         return $repository->findBy($criteria, $orderBy);
+    }
+
+    /**
+     * @param Criteria $criteria
+     * @return array
+     */
+    public function matching(Criteria $criteria): array
+    {
+        $repository = $this->entityManager->getRepository(Entity::class);
+
+        return $repository->matching($criteria)->getValues();
     }
 
     /**

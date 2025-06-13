@@ -1,3 +1,7 @@
+## 1.2.2
+
+- New command for log retention
+
 ## 1.2.1
 
 - Country added in logs grid
