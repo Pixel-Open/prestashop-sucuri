@@ -84,8 +84,8 @@ Keep logs for the specified number of days in command argument. Default period i
 158 logs purged for a 30-day retention period
 ```
 
-It's recommended to clean the logs hourly using a CRON job.
+It's recommended to clean the logs daily using a CRON job.
 
 ```php
-0 * * * * /path/to/prestashop/bin/console sucuri:log-clean 60
+0 1 * * * /path/to/prestashop/bin/console sucuri:log-clean 60
 ```
